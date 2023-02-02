@@ -112,6 +112,18 @@ class Sprite:
                 else:
                     self.bitmap = memoryview(self.bitmapSource)[offset:offset+self.bitmapByteCount]
 
+class Font:
+    def __init__(self, width, height, space, whiteFontFile=False, lightGrayFontFile=False, darkGrayFontFile=False, blackFontFile=False, x=0, y=0):
+        if whiteFontFile: self.w_font_file = whiteFontFile
+        if lightGrayFontFile: self.lg_font_file = lightGrayFontFile
+        if darkGrayFontFile: self.dg_font_file = darkGrayFontFile
+        if blackFontFile: self.b_font_file = blackFontFile
+        self.x = x
+        self.y = y
+        self.font_width = width
+        self.font_height = height
+        self.font_space = space
+        self.font_glyphcnt = sz // width
 
 # The times below are calculated using phase 1 and phase 2 pre-charge
 # periods of 1 clock.
@@ -895,6 +907,7 @@ class Grayscale:
 
 
     def setFont(self, fontFile, width, height, space):
+        self.font_file = fontFile
         sz = stat(fontFile)[6]
         self.font_bmap = bytearray(sz)
         with open(fontFile, 'rb') as fh:
@@ -950,6 +963,29 @@ class Grayscale:
             ol += font_space
             x += font_space
 
+    def drawFont(self, f, stringToPrint):
+        old_font = self.font_file
+        old_width = self.font_width
+        old_height = self.font_height
+        old_space = self.font_space
+        
+        if f.w_font_file:
+            self.setFont(f.w_font_file, f.width, f.height, f.space)
+            self.drawText(stringToPrint, f.x, f.y, 1)
+        
+        if f.lg_font_file:
+            self.setFont(f.w_font_file, f.width, f.height, f.space)
+            self.drawText(stringToPrint, f.x, f.y, 3)
+        
+        if f.dg_font_file:
+            self.setFont(f.w_font_file, f.width, f.height, f.space)
+            self.drawText(stringToPrint, f.x, f.y, 2)    
+        
+        if f.b_font_file:
+            self.setFont(f.w_font_file, f.width, f.height, f.space)
+            self.drawText(stringToPrint, f.x, f.y, 0)
+            
+        self.setFont(old_font, old_width, old_height, old_space)
 
     @micropython.viper
     def blit(self, src, x:int, y:int, width:int, height:int, key:int, mirrorX:int, mirrorY:int):
